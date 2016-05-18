@@ -72,6 +72,56 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testStoreKeyAndValueSentByIntegerHaveToBeSentAsString()
+    {
+        // Arrange.
+        $integerKey = 1;
+        $integerValue = 2;
+        $stringKey = (string)$integerKey;
+        $stringValue = (string)$integerValue;
+        
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('putItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Item' => [
+                    $this->storeKeyAttribute => ['N' => $stringKey],
+                    'status' => ['N' => $stringValue],
+                ],
+            ]);
+
+
+        // Act.
+        $this->storeKeyClient->store($integerKey, $integerValue);
+
+        // Assert in arrange.
+    }
+
+    public function testGetKeyAndValueSentByIntegerHasToBeSentAsString()
+    {
+        // Arrange.
+        $integerKey = 1;
+        $stringKey = (string)$integerKey;
+        $expected = 1;
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('getItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Key' => [
+                    $this->storeKeyAttribute => ['N' => $stringKey],
+                ],
+            ])
+            ->willReturn(['Item' => $expected]);
+
+        // Act.
+        $actual = $this->storeKeyClient->get($integerKey);
+
+        // Assert.
+        $this->assertEquals($expected, $actual);
+    }
+
     public function setUp()
     {
         $this->mockDynamoDbClient = $this->getMockBuilder(DynamoDbClient::class)

@@ -59,8 +59,8 @@ class Client
         $this->dynamoDbClient->putItem([
             'TableName' => $this->tableName,
             'Item' => [
-                $this->attribute => [$this->getVariableType($key) => $key],
-                'status' => [$this->getVariableType($value) => $value],
+                $this->attribute => [$this->getVariableType($key) => (string)$key],
+                'status' => [$this->getVariableType($value) => (string)$value],
             ],
         ]);
     }
@@ -75,7 +75,7 @@ class Client
         $response = $this->dynamoDbClient->getItem([
             'TableName' => $this->tableName,
             'Key' => [
-                $this->attribute => ['S' => $key],
+                $this->attribute => [$this->getVariableType($key) => (string)$key],
             ],
         ]);
 
