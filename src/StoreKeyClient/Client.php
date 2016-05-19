@@ -81,6 +81,8 @@ class Client
     }
 
     /**
+     * @deprecated deprecated since version 2.0
+     *
      * @param string $key
      *
      * @returns mixed
