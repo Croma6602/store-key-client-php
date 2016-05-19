@@ -51,6 +51,21 @@ class Client
     }
 
     /**
+     * @param $key
+     * @param $value
+     *
+     * @return int|string
+     */
+    private function getCastedResponse($key, $value)
+    {
+        if ($key === 'N') {
+            return (int) $value;
+        }
+
+        return (string) $value;
+    }
+
+    /**
      * @param string $key
      * @param mixed  $value
      */
@@ -59,8 +74,8 @@ class Client
         $this->dynamoDbClient->putItem([
             'TableName' => $this->tableName,
             'Item' => [
-                $this->attribute => [$this->getVariableType($key) => (string)$key],
-                'status' => [$this->getVariableType($value) => (string)$value],
+                $this->attribute => [$this->getVariableType($key) => (string) $key],
+                'status' => [$this->getVariableType($value) => (string) $value],
             ],
         ]);
     }
@@ -75,10 +90,43 @@ class Client
         $response = $this->dynamoDbClient->getItem([
             'TableName' => $this->tableName,
             'Key' => [
-                $this->attribute => [$this->getVariableType($key) => (string)$key],
+                $this->attribute => [$this->getVariableType($key) => (string) $key],
             ],
         ]);
 
         return $response['Item'];
+    }
+
+    /**
+     * @param $key
+     *
+     * @return int|string
+     */
+    public function getValue($key)
+    {
+        $response = $this->dynamoDbClient->getItem([
+            'TableName' => $this->tableName,
+            'Key' => [
+                $this->attribute => [$this->getVariableType($key) => (string) $key],
+            ],
+        ]);
+        $array = $response['Item']['status'];
+        $value = reset($array);
+        $key = key($array);
+
+        return $this->getCastedResponse($key, $value);
+    }
+
+    /**
+     * @param $key
+     */
+    public function delete($key)
+    {
+        $this->dynamoDbClient->deleteItem([
+            'TableName' => $this->tableName,
+            'Key' => [
+                $this->attribute => [$this->getVariableType($key) => (string) $key],
+            ],
+        ]);
     }
 }
