@@ -77,9 +77,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         // Arrange.
         $integerKey = 1;
         $integerValue = 2;
-        $stringKey = (string)$integerKey;
-        $stringValue = (string)$integerValue;
-        
+        $stringKey = (string) $integerKey;
+        $stringValue = (string) $integerValue;
+
         $this->mockDynamoDbClient
             ->expects($this->once())
             ->method('putItem')
@@ -91,7 +91,6 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                 ],
             ]);
 
-
         // Act.
         $this->storeKeyClient->store($integerKey, $integerValue);
 
@@ -102,7 +101,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         // Arrange.
         $integerKey = 1;
-        $stringKey = (string)$integerKey;
+        $stringKey = (string) $integerKey;
         $expected = 1;
         $this->mockDynamoDbClient
             ->expects($this->once())
@@ -122,11 +121,83 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testGetValueAndValueHasToBeAnInteger()
+    {
+        // Arrange.
+        $integerKey = 1;
+        $stringKey = (string) $integerKey;
+        $expected = 1;
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('getItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Key' => [
+                    $this->storeKeyAttribute => ['N' => $stringKey],
+                ],
+            ])
+            ->willReturn(['Item' => [
+                'status' => ['N' => $expected],
+            ]]);
+
+        // Act.
+        $actual = $this->storeKeyClient->getValue($integerKey);
+
+        // Assert.
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testGetValueAndValueHasToBeAnString()
+    {
+        // Arrange.
+        $stringKey = 'foo';
+        $expected = 'bar';
+
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('getItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Key' => [
+                    $this->storeKeyAttribute => ['S' => $stringKey],
+                ],
+            ])
+            ->willReturn(['Item' => [
+                'status' => ['S' => $expected],
+            ]]);
+
+        // Act.
+        $actual = $this->storeKeyClient->getValue($stringKey);
+
+        // Assert.
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testRemoveAKey()
+    {
+        // Arrange.
+        $key = 'bar';
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('deleteItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Key' => [
+                    $this->storeKeyAttribute => ['S' => $key],
+                ],
+            ]);
+
+        // Act.
+        $this->storeKeyClient->delete($key);
+
+        // Assert in arrange.
+    }
+
     public function setUp()
     {
         $this->mockDynamoDbClient = $this->getMockBuilder(DynamoDbClient::class)
             ->disableOriginalConstructor()
-            ->setMethods(['putItem', 'getItem'])
+            ->setMethods(['putItem', 'getItem', 'deleteItem'])
             ->getMock();
 
         $this->storeKeyClient = new Client(
