@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.3 - 2016-05-23
+
+* get and getValue methods return false on non existent key
+
 ## 1.0.2 - 2016-05-19
 
 * Added delete method to the client

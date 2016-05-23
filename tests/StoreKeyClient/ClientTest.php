@@ -2,6 +2,7 @@
 
 namespace Wadify\Test\StoreKeyClient\Client;
 
+use Aws\Result;
 use Wadify\StoreKeyClient\Client;
 use Aws\DynamoDb\DynamoDbClient;
 
@@ -54,6 +55,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         // Arrange.
         $expected = 'foo';
         $key = 'bar';
+        $result = new Result(['Item' => $expected]);
         $this->mockDynamoDbClient
             ->expects($this->once())
             ->method('getItem')
@@ -63,13 +65,36 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                     $this->storeKeyAttribute => ['S' => $key],
                 ],
             ])
-            ->willReturn(['Item' => $expected]);
+            ->willReturn($result);
 
         // Act.
         $actual = $this->storeKeyClient->get($key);
 
         // Assert.
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testGetWithNonExistentKey()
+    {
+        // Arrange.
+        $stringKey = 'foo';
+        $result = new Result([]);
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('getItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Key' => [
+                    $this->storeKeyAttribute => ['S' => $stringKey],
+                ],
+            ])
+            ->willReturn($result);
+
+        // Act.
+        $actual = $this->storeKeyClient->get($stringKey);
+
+        // Assert.
+        $this->assertFalse($actual);
     }
 
     public function testStoreKeyAndValueSentByIntegerHaveToBeSentAsString()
@@ -103,6 +128,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $integerKey = 1;
         $stringKey = (string) $integerKey;
         $expected = 1;
+        $result = new Result(['Item' => $expected]);
         $this->mockDynamoDbClient
             ->expects($this->once())
             ->method('getItem')
@@ -112,7 +138,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                     $this->storeKeyAttribute => ['N' => $stringKey],
                 ],
             ])
-            ->willReturn(['Item' => $expected]);
+            ->willReturn($result);
 
         // Act.
         $actual = $this->storeKeyClient->get($integerKey);
@@ -127,6 +153,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $integerKey = 1;
         $stringKey = (string) $integerKey;
         $expected = 1;
+        $result = new Result(['Item' => [
+            'status' => ['N' => $expected],
+        ]]);
         $this->mockDynamoDbClient
             ->expects($this->once())
             ->method('getItem')
@@ -136,9 +165,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                     $this->storeKeyAttribute => ['N' => $stringKey],
                 ],
             ])
-            ->willReturn(['Item' => [
-                'status' => ['N' => $expected],
-            ]]);
+            ->willReturn($result);
 
         // Act.
         $actual = $this->storeKeyClient->getValue($integerKey);
@@ -152,7 +179,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         // Arrange.
         $stringKey = 'foo';
         $expected = 'bar';
-
+        $result = new Result(['Item' => [
+            'status' => ['S' => $expected],
+        ]]);
         $this->mockDynamoDbClient
             ->expects($this->once())
             ->method('getItem')
@@ -162,15 +191,36 @@ class ClientTest extends \PHPUnit_Framework_TestCase
                     $this->storeKeyAttribute => ['S' => $stringKey],
                 ],
             ])
-            ->willReturn(['Item' => [
-                'status' => ['S' => $expected],
-            ]]);
+            ->willReturn($result);
 
         // Act.
         $actual = $this->storeKeyClient->getValue($stringKey);
 
         // Assert.
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testGetValueWithNonExistentKey()
+    {
+        // Arrange.
+        $stringKey = 'foo';
+        $result = new Result([]);
+        $this->mockDynamoDbClient
+            ->expects($this->once())
+            ->method('getItem')
+            ->with([
+                'TableName' => $this->storeKeyTableName,
+                'Key' => [
+                    $this->storeKeyAttribute => ['S' => $stringKey],
+                ],
+            ])
+            ->willReturn($result);
+
+        // Act.
+        $actual = $this->storeKeyClient->getValue($stringKey);
+
+        // Assert.
+        $this->assertFalse($actual);
     }
 
     public function testRemoveAKey()
