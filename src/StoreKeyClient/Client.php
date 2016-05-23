@@ -104,7 +104,6 @@ class Client
 
     /**
      * @param $key
-     ** get and getValue methods return false on non existent key* get and getValue methods return false on non existent key
      * @return int|string|bool
      */
     public function getValue($key)
