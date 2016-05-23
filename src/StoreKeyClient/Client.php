@@ -95,14 +95,17 @@ class Client
                 $this->attribute => [$this->getVariableType($key) => (string) $key],
             ],
         ]);
-
-        return $response['Item'];
+        if ($response->hasKey('Item')) {
+            return $response['Item'];
+        } else {
+            return false;
+        }
     }
 
     /**
      * @param $key
-     *
-     * @return int|string
+     ** get and getValue methods return false on non existent key* get and getValue methods return false on non existent key
+     * @return int|string|bool
      */
     public function getValue($key)
     {
@@ -112,11 +115,15 @@ class Client
                 $this->attribute => [$this->getVariableType($key) => (string) $key],
             ],
         ]);
-        $array = $response['Item']['status'];
-        $value = reset($array);
-        $key = key($array);
+        if ($response->hasKey('Item')) {
+            $array = $response['Item']['status'];
+            $value = reset($array);
+            $key = key($array);
 
-        return $this->getCastedResponse($key, $value);
+            return $this->getCastedResponse($key, $value);
+        } else {
+            return false;
+        }
     }
 
     /**
